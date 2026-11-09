@@ -308,8 +308,9 @@ jobs:
           cp os/gpu-test/Dockerfile.core ctx/Dockerfile
           docker build -t core-gpu --build-arg MACHINE="${MACHINE}" \
             --label org.opencontainers.image.source=https://github.com/${REPO_OWNER}/core ctx
-          VERSION=$(docker run --rm --entrypoint python3 core-gpu \
-            -c "import homeassistant.const as c; print(c.__version__)")
+          # The Supervisor looks for the image tag of the io.hass.version
+          # label, which differs from __version__ on dev builds
+          VERSION=$(docker inspect core-gpu --format '{{ index .Config.Labels "io.hass.version" }}')
           docker tag core-gpu "${REGISTRY}/${MACHINE}-homeassistant:${VERSION}"
           docker push "${REGISTRY}/${MACHINE}-homeassistant:${VERSION}"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
