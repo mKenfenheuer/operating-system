@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Maximilian Kenfenheuer <maximilian.kenfenheuer@ksol.it>
+Date: Mon, 9 Nov 2026 13:10:20 +0100
+Subject: [PATCH] ARM: dts: bcm2711/bcm2712: Enable V3D on Home Assistant
+ Yellow
+
+Yellow does not use the vc4-kms-v3d overlay, so the V3D GPU stays
+disabled by the downstream device tree. Enable it on CM4 and CM5, so
+the render node /dev/dri/renderD128 is available for Vulkan and OpenGL
+(Mesa v3d/v3dv) in apps.
+---
+ arch/arm/boot/dts/broadcom/bcm2711-rpi-cm4-ha-yellow.dts   | 5 +++++
+ arch/arm64/boot/dts/broadcom/bcm2712-rpi-cm5-ha-yellow.dts | 4 ++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/arch/arm/boot/dts/broadcom/bcm2711-rpi-cm4-ha-yellow.dts b/arch/arm/boot/dts/broadcom/bcm2711-rpi-cm4-ha-yellow.dts
+index c60a013..588f317 100644
+--- a/arch/arm/boot/dts/broadcom/bcm2711-rpi-cm4-ha-yellow.dts
++++ b/arch/arm/boot/dts/broadcom/bcm2711-rpi-cm4-ha-yellow.dts
+@@ -657,6 +657,11 @@
+ 	pinctrl-0 = <&audio_pins>;
+ };
+ 
++/* after bcm2711-rpi-ds.dtsi, which recreates the node disabled */
++&v3d {
++	status = "okay";
++};
++
+ cam0_reg: &cam1_reg {
+ 	gpio = <&expgpio 5 GPIO_ACTIVE_HIGH>;
+ };
+diff --git a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-cm5-ha-yellow.dts b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-cm5-ha-yellow.dts
+index b85fa4c..30e5ba1 100644
+--- a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-cm5-ha-yellow.dts
++++ b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-cm5-ha-yellow.dts
+@@ -171,6 +171,10 @@
+ 	status = "okay";
+ };
+ 
++&v3d {
++	status = "okay";
++};
++
+ /* I2C pins on pin header */
+ &i2c1 {
+ 	pinctrl-names = "default";
