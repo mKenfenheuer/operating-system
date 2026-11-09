@@ -15,7 +15,8 @@ fi
 # The modules are not part of the module index of the base system, so load
 # their in-tree dependencies first and insert them by path.
 load_module() {
-    module="${MODULE_DIR}/${1}.ko"
+    local module="${MODULE_DIR}/${1}.ko"
+    local name dep
     name=$(echo "${1}" | tr '-' '_')
 
     if [ -d "/sys/module/${name}" ]; then
@@ -33,7 +34,8 @@ load_module() {
 }
 
 if ! load_module nvidia; then
-    echo "[ERROR] Can't load NVIDIA kernel module (GPU older than Turing?)"
+    echo "[ERROR] Can't load NVIDIA kernel module, see dmesg. GPUs older than" \
+        "Turing need the nvidia-legacy extension."
     exit 1
 fi
 load_module nvidia-uvm
@@ -46,11 +48,12 @@ for gpu in /proc/driver/nvidia/gpus/*/information; do
 done
 
 # runc resolves device cgroup rules through /dev/char, make sure links exist
-nvidia-ctk system create-dev-char-symlinks --create-all
+nvidia-ctk --quiet system create-dev-char-symlinks --create-all
 
 mkdir -p "$(dirname "${CDI_SPEC}")"
-nvidia-ctk cdi generate \
+nvidia-ctk --quiet cdi generate \
     --output="${CDI_SPEC}" \
+    --ldconfig-path=/usr/sbin/ldconfig \
     --device-name-strategy=index \
     --device-name-strategy=uuid
 
