@@ -62,9 +62,10 @@ docker images --format '{{.Repository}}:{{.Tag}}' | sort
 kill "$(cat /run/variant-docker.pid)"
 for _ in $(seq 1 30); do [ -e /run/variant-docker.pid ] || break; sleep 1; done
 
-# Core is installed already, so the Supervisor skips the landing page
+# Core is installed already, so the Supervisor skips the landing page.
+# override_image keeps the Supervisor on the GHCR image of the fork.
 jq -n --arg version "${CORE_VERSION}" --arg image "${CORE_IMAGE}" \
-    '{version: $version, image: $image}' > /mnt/data/supervisor/homeassistant.json
+    '{version: $version, image: $image, override_image: true}' > /mnt/data/supervisor/homeassistant.json
 
 if [ "${EXT}" != "none" ]; then
     mkdir -p /mnt/data/supervisor/extensions
