@@ -1,0 +1,15 @@
+[Unit]
+Description=HAOS NVIDIA GPU setup
+Documentation=man:systemd-sysext(8)
+# The driver comes from the "nvidia" system extension on the data partition
+ConditionPathExists=/usr/libexec/haos-nvidia-setup
+After=systemd-sysext.service systemd-udev-trigger.service
+Before=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/haos-nvidia-setup
+
+[Install]
+WantedBy=multi-user.target

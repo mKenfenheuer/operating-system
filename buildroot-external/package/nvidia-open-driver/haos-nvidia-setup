@@ -1,0 +1,57 @@
+#!/bin/sh
+# Load the NVIDIA kernel modules shipped by the "nvidia" system extension,
+# create the device nodes and generate the CDI specification which Docker
+# uses to hand the GPU (device nodes and driver libraries) to containers.
+set -e
+
+CDI_SPEC=/run/cdi/nvidia.yaml
+MODULE_DIR="/usr/lib/modules/$(uname -r)/updates/nvidia"
+
+if ! grep -qs "^0x10de$" /sys/bus/pci/devices/*/vendor; then
+    echo "[INFO] No NVIDIA device found, skipping"
+    exit 0
+fi
+
+# The modules are not part of the module index of the base system, so load
+# their in-tree dependencies first and insert them by path.
+load_module() {
+    module="${MODULE_DIR}/${1}.ko"
+    name=$(echo "${1}" | tr '-' '_')
+
+    if [ -d "/sys/module/${name}" ]; then
+        return 0
+    fi
+
+    for dep in $(modinfo -F depends "${module}" | tr ',' ' '); do
+        if [ -e "${MODULE_DIR}/${dep}.ko" ]; then
+            load_module "${dep}"
+        else
+            modprobe "${dep}"
+        fi
+    done
+    insmod "${module}"
+}
+
+if ! load_module nvidia; then
+    echo "[ERROR] Can't load NVIDIA kernel module (GPU older than Turing?)"
+    exit 1
+fi
+load_module nvidia-uvm
+
+# Create /dev/nvidia-uvm(-tools), /dev/nvidiactl and /dev/nvidia<N>
+nvidia-modprobe -u
+for gpu in /proc/driver/nvidia/gpus/*/information; do
+    minor=$(sed -n 's/^Device Minor:[[:space:]]*\([0-9]\+\)$/\1/p' "${gpu}")
+    [ -n "${minor}" ] && nvidia-modprobe -c "${minor}"
+done
+
+# runc resolves device cgroup rules through /dev/char, make sure links exist
+nvidia-ctk system create-dev-char-symlinks --create-all
+
+mkdir -p "$(dirname "${CDI_SPEC}")"
+nvidia-ctk cdi generate \
+    --output="${CDI_SPEC}" \
+    --device-name-strategy=index \
+    --device-name-strategy=uuid
+
+nvidia-smi -L

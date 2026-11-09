@@ -13,6 +13,7 @@ HOOK_FILE=${3}
 . "${SCRIPT_DIR}/rootfs-layer.sh"
 . "${SCRIPT_DIR}/name.sh"
 . "${SCRIPT_DIR}/rauc.sh"
+. "${SCRIPT_DIR}/sysext.sh"
 . "${HOOK_FILE}"
 
 # Cleanup
@@ -24,6 +25,9 @@ haos_pre_image
 
 # Disk & OTA
 create_disk_image
+
+# System extensions (e.g. GPU drivers), installed separately on the data partition
+create_sysext_images
 
 # Hook post image build stuff
 haos_post_image
