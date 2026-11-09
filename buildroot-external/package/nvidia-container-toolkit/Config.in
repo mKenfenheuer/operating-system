@@ -1,0 +1,13 @@
+config BR2_PACKAGE_NVIDIA_CONTAINER_TOOLKIT
+	bool "NVIDIA Container Toolkit"
+	depends on BR2_PACKAGE_HOST_GO_TARGET_ARCH_SUPPORTS
+	depends on BR2_PACKAGE_HOST_GO_TARGET_CGO_LINKING_SUPPORTS
+	depends on BR2_PACKAGE_NVIDIA_OPEN_DRIVER || BR2_PACKAGE_NVIDIA_LEGACY_DRIVER
+	help
+	  nvidia-ctk and nvidia-cdi-hook. They generate the Container
+	  Device Interface (CDI) specification for the installed NVIDIA
+	  driver, which Docker uses to pass the GPU to containers.
+
+	  Installed into the NVIDIA driver system extensions.
+
+	  https://github.com/NVIDIA/nvidia-container-toolkit

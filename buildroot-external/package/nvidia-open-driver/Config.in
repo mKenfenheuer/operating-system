@@ -1,0 +1,26 @@
+config BR2_PACKAGE_NVIDIA_OPEN_DRIVER
+	bool "NVIDIA GPU driver (system extension)"
+	depends on BR2_x86_64
+	depends on BR2_LINUX_KERNEL
+	depends on BR2_TOOLCHAIN_BUILDROOT_GLIBC # ldconfig
+	select BR2_PACKAGE_HOST_EROFS_UTILS
+	help
+	  NVIDIA open GPU kernel modules together with the matching
+	  CUDA/NVML/NVENC/NVDEC user space libraries, nvidia-smi and
+	  the GSP firmware.
+
+	  Due to its size, the driver is not installed into the root
+	  file system. It is packaged as a systemd system extension
+	  image (haos_<board>-<version>.nvidia.raw) which is placed on
+	  the data partition and merged into /usr at boot. The
+	  extension is bound to the exact OS version it was built
+	  with, so kernel modules and user space always match.
+
+	  Requires a Turing (GTX 16xx / RTX 20xx) or newer GPU. Older
+	  GPUs need nvidia-legacy-driver.
+
+	  https://github.com/NVIDIA/open-gpu-kernel-modules
+
+comment "NVIDIA GPU driver needs the Buildroot glibc toolchain and a Linux kernel"
+	depends on BR2_x86_64
+	depends on !BR2_LINUX_KERNEL || !BR2_TOOLCHAIN_BUILDROOT_GLIBC

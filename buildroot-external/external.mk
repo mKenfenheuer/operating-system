@@ -1,3 +1,8 @@
+# Packages which are too large for the root file system install into
+# $(HAOS_SYSEXT_DIR)/<name>. post-image.sh packs every tree into a separate
+# system extension image (see scripts/sysext.sh).
+HAOS_SYSEXT_DIR = $(BASE_DIR)/sysext
+
 include $(sort $(wildcard $(BR2_EXTERNAL_HAOS_PATH)/package/*/*.mk))
 
 .PHONY: linux-check-dotconfig
