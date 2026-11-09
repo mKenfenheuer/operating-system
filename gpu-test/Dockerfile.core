@@ -1,0 +1,7 @@
+# Test image: Home Assistant Core dev with the GPU changes of hardware/hassio,
+# aiohasupervisor with the hardware GPU API and the frontend with GPU cards.
+ARG MACHINE=generic-x86-64
+FROM ghcr.io/home-assistant/${MACHINE}-homeassistant:dev
+COPY ha/homeassistant/ /usr/src/homeassistant/homeassistant/
+COPY aiohasupervisor/ /usr/local/lib/python3.14/site-packages/aiohasupervisor/
+COPY hass_frontend/ /usr/local/lib/python3.14/site-packages/hass_frontend/
