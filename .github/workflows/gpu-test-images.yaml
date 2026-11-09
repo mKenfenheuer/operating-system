@@ -303,6 +303,7 @@ jobs:
         run: |
           mkdir -p ctx/ha
           cp -r core/homeassistant ctx/ha/homeassistant
+          cp -r core/script ctx/ha/script
           cp -r client/aiohasupervisor ctx/aiohasupervisor
           tar -C ctx -xzf hass_frontend.tar.gz
           cp os/gpu-test/Dockerfile.core ctx/Dockerfile

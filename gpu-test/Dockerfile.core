@@ -5,3 +5,16 @@ FROM ghcr.io/home-assistant/${MACHINE}-homeassistant:dev
 COPY ha/homeassistant/ /usr/src/homeassistant/homeassistant/
 COPY aiohasupervisor/ /usr/local/lib/python3.14/site-packages/aiohasupervisor/
 COPY hass_frontend/ /usr/local/lib/python3.14/site-packages/hass_frontend/
+COPY ha/script/ /usr/src/homeassistant/script/
+
+# Generate the English translations of the changed integrations, and pin
+# the frontend to the bundled build. Otherwise Home Assistant installs the
+# version of the frontend manifest from PyPI on startup and replaces it.
+RUN cd /usr/src/homeassistant \
+    && python3 -m script.translations develop --all > /dev/null \
+    && rm -rf script \
+    && FRONTEND=$(python3 -c "import importlib.metadata as m; print(m.version('home-assistant-frontend'))") \
+    && sed -i "s/home-assistant-frontend==[^\"]*/home-assistant-frontend==${FRONTEND}/" \
+        homeassistant/components/frontend/manifest.json \
+        homeassistant/package_constraints.txt \
+    && grep -q "home-assistant-frontend==${FRONTEND}" homeassistant/components/frontend/manifest.json
