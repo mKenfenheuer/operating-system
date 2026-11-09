@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Maximilian Kenfenheuer <maximilian.kenfenheuer@ksol.it>
+Date: Mon, 9 Nov 2026 14:33:44 +0100
+Subject: [PATCH] drm/amdkfd: don't log expected userptr failures of file
+ backed memory
+
+ROCm registers host memory as KFD userptr with
+AMDGPU_GEM_USERPTR_ANONONLY. For file backed mappings, e.g. a model file
+mapped with mmap by llama.cpp, amdgpu_ttm_tt_get_user_pages() fails with
+-EPERM and user space falls back to another way. Every such allocation
+logged an error, hundreds per model load, flooding the kernel log and
+the console.
+
+Log -EPERM at debug level, other errors stay errors.
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
+index d56728b..ddf5246 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_amdkfd_gpuvm.c
+@@ -1093,6 +1093,12 @@ static int init_user_pages(struct kgd_mem *mem, uint64_t user_addr,
+ 	if (ret) {
+ 		if (ret == -EAGAIN)
+ 			pr_debug("Failed to get user pages, try again\n");
++		else if (ret == -EPERM)
++			/* File backed memory with AMDGPU_GEM_USERPTR_ANONONLY,
++			 * user space falls back to another way to map it.
++			 */
++			pr_debug("%s: Failed to get user pages: %d\n",
++				 __func__, ret);
+ 		else
+ 			pr_err("%s: Failed to get user pages: %d\n", __func__, ret);
+ 		goto unregister_out;
+-- 
+2.53.0
+
