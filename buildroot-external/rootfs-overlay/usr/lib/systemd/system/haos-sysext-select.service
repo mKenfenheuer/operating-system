@@ -1,0 +1,16 @@
+[Unit]
+Description=HAOS system extensions of the running OS version
+Documentation=man:systemd-sysext(8)
+DefaultDependencies=no
+RequiresMountsFor=/mnt/data
+After=local-fs.target
+Before=systemd-sysext.service
+ConditionDirectoryNotEmpty=/mnt/data/supervisor/extensions
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/haos-sysext-select
+
+[Install]
+WantedBy=systemd-sysext.service

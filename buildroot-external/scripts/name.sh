@@ -1,11 +1,14 @@
 #!/bin/bash
 
+# HAOS_VARIANT is set while the images of an OS variant are created (see
+# sysext.sh), e.g. haos_generic-x86-64-nvidia-19.0.img.xz. Variants share the
+# root file system and the RAUC compatible of their board.
 function haos_image_name() {
-    echo "${BINARIES_DIR}/${HAOS_ID}_${BOARD_ID}-$(haos_version).${1}"
+    echo "$(haos_image_basename).${1}"
 }
 
 function haos_image_basename() {
-    echo "${BINARIES_DIR}/${HAOS_ID}_${BOARD_ID}-$(haos_version)"
+    echo "${BINARIES_DIR}/${HAOS_ID}_${BOARD_ID}${HAOS_VARIANT:+-${HAOS_VARIANT}}-$(haos_version)"
 }
 
 function haos_rauc_compatible() {

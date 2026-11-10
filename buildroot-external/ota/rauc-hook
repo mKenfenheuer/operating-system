@@ -98,6 +98,41 @@ post_install_kernel() {
     fi
 }
 
+post_install_extensions() {
+    EXT_DIR=/mnt/data/supervisor/extensions
+    EXT_NEW="${EXT_DIR}/${RAUC_MF_VERSION}"
+    # shellcheck disable=SC1091
+    CURRENT_VERSION="$(. /etc/os-release && echo "${VERSION_ID}")"
+
+    # The system extension of an OS variant (e.g. nvidia) is part of its
+    # bundle. The new version gets the extensions of the bundle, none for a
+    # bundle without variant. The extensions of the running version stay for
+    # a rollback, older ones are removed.
+    if ! ls "${RAUC_BUNDLE_MOUNT_POINT}"/*.raw > /dev/null 2>&1 && [ ! -d "${EXT_DIR}" ]; then
+        return 0
+    fi
+
+    rm -rf "${EXT_NEW}.new"
+    mkdir -p "${EXT_NEW}.new"
+    for image in "${RAUC_BUNDLE_MOUNT_POINT}"/*.raw; do
+        [ -f "${image}" ] || continue
+        echo "Installing system extension $(basename "${image}" .raw) for ${RAUC_MF_VERSION}"
+        cp "${image}" "${EXT_NEW}.new/"
+    done
+    sync -f "${EXT_NEW}.new"
+    rm -rf "${EXT_NEW}"
+    mv "${EXT_NEW}.new" "${EXT_NEW}"
+
+    for dir in "${EXT_DIR}"/*; do
+        [ -e "${dir}" ] || continue
+        version="$(basename "${dir}")"
+        if [ "${version}" != "${CURRENT_VERSION}" ] && [ "${version}" != "${RAUC_MF_VERSION}" ]; then
+            rm -rf "${dir}"
+        fi
+    done
+    sync -f "${EXT_DIR}"
+}
+
 ##
 # Hooks
 
@@ -112,6 +147,9 @@ case "$1" in
          echo "Compatible does not match!" 1>&2
          exit 10
          ;;
+    post-install)
+        post_install_extensions
+        ;;
     slot-install)
         if [ "${RAUC_SLOT_CLASS}" = "boot" ]; then
             install_boot

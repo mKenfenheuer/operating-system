@@ -10,9 +10,8 @@ config BR2_PACKAGE_NVIDIA_LEGACY_DRIVER
 	  (GTX 9xx), Pascal (GTX 10xx, Tesla P4/P40/P100) and Volta.
 	  It contains the same user space as the "nvidia" extension.
 
-	  Packaged as the system extension image
-	  haos_<board>-<version>.nvidia-legacy.raw. Install either
-	  this one or the "nvidia" extension, not both.
+	  Packaged as a system extension for the OS variant
+	  "nvidia-legacy" (haos_<board>-nvidia-legacy-<version>).
 
 comment "NVIDIA legacy GPU driver needs the Buildroot glibc toolchain and a Linux kernel"
 	depends on BR2_x86_64

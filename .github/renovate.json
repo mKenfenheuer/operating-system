@@ -64,6 +64,17 @@
       "depNameTemplate": "home-assistant/tempio",
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "loose"
+    },
+    {
+      "customType": "regex",
+      "description": "NVIDIA GPU drivers of the nvidia and nvidia-legacy OS variants. The driver versions are tagged in the repository of the open kernel modules.",
+      "managerFilePatterns": [
+        "/^buildroot-external/package/nvidia-(open|legacy)-driver/nvidia-(open|legacy)-driver\\.mk$/"
+      ],
+      "matchStrings": ["NVIDIA_(?:OPEN|LEGACY)_DRIVER_VERSION = (?<currentValue>\\d+\\.\\d+(?:\\.\\d+)?)"],
+      "depNameTemplate": "NVIDIA/open-gpu-kernel-modules",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "loose"
     }
   ],
 
@@ -147,6 +158,29 @@
       "fetchChangeLogs": "branch",
       "commitBody": "Full changelog:\n{{#if logJSON.versions}}{{#each logJSON.versions}}* https://github.com/labgrid-project/labgrid/releases/tag/v{{version}}\n{{/each}}{{else}}* https://github.com/labgrid-project/labgrid/releases/tag/v{{newVersion}}{{/if}}",
       "addLabels": ["build"]
+    },
+    {
+      "description": "NVIDIA drivers, one PR per driver branch. The NVIDIA driver hash workflow adds the checksum of the new driver to the PR.",
+      "matchPackageNames": ["NVIDIA/open-gpu-kernel-modules"],
+      "commitMessageTopic": "NVIDIA driver",
+      "commitMessageExtra": "to {{newVersion}}",
+      "prBodyNotes": [
+        "* https://github.com/NVIDIA/open-gpu-kernel-modules/releases/tag/{{newVersion}}"
+      ],
+      "addLabels": ["board/generic-x86-64", "board/ova"]
+    },
+    {
+      "description": "The legacy driver stays on 580, the last branch for Maxwell, Pascal and Volta",
+      "matchPackageNames": ["NVIDIA/open-gpu-kernel-modules"],
+      "matchFileNames": ["buildroot-external/package/nvidia-legacy-driver/**"],
+      "allowedVersions": "/^580\\./"
+    },
+    {
+      "description": "Moving the nvidia variant to a new driver branch is a deliberate change",
+      "matchPackageNames": ["NVIDIA/open-gpu-kernel-modules"],
+      "matchFileNames": ["buildroot-external/package/nvidia-open-driver/**"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }
