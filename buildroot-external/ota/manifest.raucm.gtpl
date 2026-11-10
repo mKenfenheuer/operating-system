@@ -7,7 +7,7 @@ format=verity
 
 [hooks]
 filename=hook
-hooks=install-check;
+hooks=install-check;post-install;
 
 [image.boot]
 filename=boot.vfat

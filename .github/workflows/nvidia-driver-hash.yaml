@@ -1,0 +1,66 @@
+# Renovate updates the NVIDIA driver versions but can't compute the checksum
+# Buildroot checks the download against. This adds it to the PR.
+
+name: NVIDIA driver hash
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "buildroot-external/package/nvidia-open-driver/nvidia-open-driver.mk"
+      - "buildroot-external/package/nvidia-legacy-driver/nvidia-legacy-driver.mk"
+
+permissions:
+  contents: write
+
+jobs:
+  hash:
+    name: Update NVIDIA driver hash
+    # Only Renovate branches of this repository, fork PRs get a read-only token
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'renovate/')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          # A token other than GITHUB_TOKEN makes the push run the PR build
+          # again. With GITHUB_TOKEN, re-run the PR build manually.
+          token: ${{ secrets.NVIDIA_HASH_TOKEN || github.token }}
+
+      - name: Update hash files
+        run: |
+          set -euo pipefail
+          for pkg in nvidia-open-driver nvidia-legacy-driver; do
+            dir="buildroot-external/package/${pkg}"
+            var="$(echo "${pkg}" | tr 'a-z-' 'A-Z_')_VERSION"
+            version="$(sed -n "s/^${var} = //p" "${dir}/${pkg}.mk")"
+            file="NVIDIA-Linux-x86_64-${version}.run"
+            if grep -q " ${file}\$" "${dir}/${pkg}.hash"; then
+              echo "${pkg}: ${version} has a hash"
+              continue
+            fi
+            url="https://download.nvidia.com/XFree86/Linux-x86_64/${version}/${file}"
+            curl -sfL -o "/tmp/${file}" "${url}"
+            # NVIDIA publishes the checksum next to the driver
+            published="$(curl -sfL "${url}.sha256sum" | cut -d' ' -f1)"
+            computed="$(sha256sum "/tmp/${file}" | cut -d' ' -f1)"
+            if [ "${published}" != "${computed}" ]; then
+              echo "::error::${file}: checksum ${computed} doesn't match the published ${published}"
+              exit 1
+            fi
+            printf '# Locally computed\nsha256  %s  %s\n' "${computed}" "${file}" > "${dir}/${pkg}.hash"
+            echo "${pkg}: ${version} ${computed}"
+          done
+
+      - name: Commit
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update NVIDIA driver hash"
+          git push
