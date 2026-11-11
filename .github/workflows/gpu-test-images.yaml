@@ -146,6 +146,11 @@ jobs:
 
       - name: Build
         run: |
+          # Go modules through the Go proxy instead of their origin: Buildroot
+          # downloads them with GOPROXY=direct, which fails while an origin like
+          # gopkg.in is down. Only in this CI checkout, not committed.
+          sed -i 's|^\tGOPROXY=direct \\$|\tGOPROXY=https://proxy.golang.org,direct \\|' buildroot/package/pkg-golang.mk
+          grep -q 'GOPROXY=https://proxy.golang.org,direct' buildroot/package/pkg-golang.mk
           builder() {
             docker run --rm --privileged \
               -e BUILDER_UID="$(id -u)" -e BUILDER_GID="$(id -g)" \
