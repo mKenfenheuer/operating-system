@@ -1,4 +1,4 @@
-# Build and test the OVA image for Renovate PRs that update the kernel, OS Agent, tempio or the test requirements
+# Build and test the OVA image for Renovate PRs that update the kernel, OS Agent, tempio, the NVIDIA drivers or the test requirements
 
 name: OS build (PR)
 
@@ -9,6 +9,8 @@ on:
       - "buildroot-external/configs/*_defconfig"
       - "buildroot-external/package/os-agent/os-agent.mk"
       - "buildroot-external/package/tempio/tempio.mk"
+      - "buildroot-external/package/nvidia-*-driver/nvidia-*-driver.mk"
+      - "buildroot-external/package/nvidia-*-driver/nvidia-*-driver.hash"
       - "tests/requirements.txt"
 
 jobs:

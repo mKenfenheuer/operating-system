@@ -26,8 +26,13 @@ haos_pre_image
 # Disk & OTA
 create_disk_image
 
-# System extensions (e.g. GPU drivers), installed separately on the data partition
-create_sysext_images
+# OS variants: disk image and update bundle with a system extension
+for variant in $(sysext_variants); do
+    create_variant_disk_image "${variant}"
+done
 
 # Hook post image build stuff
 haos_post_image
+for variant in $(sysext_variants); do
+    HAOS_VARIANT="${variant}" haos_post_image
+done

@@ -1,0 +1,32 @@
+#!/bin/sh
+# Make the system extensions of the running OS version available to
+# systemd-sysext. The update bundle of an OS variant places them in
+# /mnt/data/supervisor/extensions/<version>/. Only images whose SHA256 matches
+# the hash this OS build recorded in /usr/lib/haos/sysext are merged.
+set -e
+
+# shellcheck disable=SC1091
+. /etc/os-release
+
+EXT_DIR="/mnt/data/supervisor/extensions/${VERSION_ID}"
+HASH_DIR=/usr/lib/haos/sysext
+RUN_DIR=/run/extensions
+
+mkdir -p "${RUN_DIR}"
+
+for image in "${EXT_DIR}"/*.raw; do
+    [ -f "${image}" ] || continue
+    name="$(basename "${image}" .raw)"
+
+    if [ ! -f "${HASH_DIR}/${name}.sha256" ]; then
+        echo "[WARNING] Unknown system extension ${name}, skipping"
+        continue
+    fi
+    if [ "$(sha256sum "${image}" | cut -d' ' -f1)" != "$(cat "${HASH_DIR}/${name}.sha256")" ]; then
+        echo "[ERROR] System extension ${name} doesn't match this OS build, skipping"
+        continue
+    fi
+
+    echo "[INFO] Using system extension ${name}"
+    ln -sf "${image}" "${RUN_DIR}/${name}.raw"
+done

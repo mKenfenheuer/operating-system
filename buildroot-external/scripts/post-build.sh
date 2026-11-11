@@ -11,6 +11,7 @@ BOARD_DIR=${2}
 . "${SCRIPT_DIR}/rootfs-layer.sh"
 . "${SCRIPT_DIR}/name.sh"
 . "${SCRIPT_DIR}/rauc.sh"
+. "${SCRIPT_DIR}/sysext.sh"
 
 
 # HAOS tasks
@@ -48,6 +49,9 @@ prepare_rauc_signing
 write_rauc_config
 install_rauc_certs
 install_bootloader_config
+
+# System extensions (e.g. the NVIDIA driver) and their hashes
+create_sysext_images
 
 # Fix overlay presets
 "${HOST_DIR}/bin/systemctl" --root="${TARGET_DIR}" preset-all

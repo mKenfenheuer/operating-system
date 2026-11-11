@@ -3,4 +3,5 @@ disable apparmor.service
 enable systemd-time-wait-sync.service
 
 enable systemd-sysext.service
+enable haos-sysext-select.service
 enable haos-nvidia.service

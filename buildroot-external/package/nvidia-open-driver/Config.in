@@ -11,9 +11,10 @@ config BR2_PACKAGE_NVIDIA_OPEN_DRIVER
 
 	  Due to its size, the driver is not installed into the root
 	  file system. It is packaged as a systemd system extension
-	  image (haos_<board>-<version>.nvidia.raw) which is placed on
-	  the data partition and merged into /usr at boot. The
-	  extension is bound to the exact OS version it was built
+	  and builds the OS variant "nvidia": its disk image and update
+	  bundle (haos_<board>-nvidia-<version>) place the extension
+	  on the data partition, and it is merged into /usr at boot.
+	  The extension is bound to the exact OS build it was built
 	  with, so kernel modules and user space always match.
 
 	  Requires a Turing (GTX 16xx / RTX 20xx) or newer GPU. Older
