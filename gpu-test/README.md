@@ -14,13 +14,16 @@ Testbuilds der Branches für GPU-Unterstützung. Nicht für den Produktivbetrieb
 | `haos_ova-19.0.dev0-gpu-nvidia-legacy.qcow2.xz` | VM | wie amdgpu, zusätzlich NVIDIA Maxwell bis Volta |
 
 AMD und Intel brauchen keine Erweiterung, die Treiber stecken im Kernel. Die NVIDIA-Varianten
-unterscheiden sich nur durch die vorinstallierte Erweiterung unter
-`/mnt/data/supervisor/extensions/`.
+sind die OS-Varianten `nvidia` und `nvidia-legacy`: gleiches Root-Dateisystem, die
+Treibererweiterung liegt unter `/mnt/data/supervisor/extensions/<version>/`. Die
+Update-Bundles der Varianten (`haos_<board>-<variante>-<version>.raucb`) bringen die
+Erweiterung mit, ein Wechsel geht mit `POST /os/update` und `{"variant": "nvidia"}`
+(oder `null` für das OS ohne NVIDIA).
 
 Alle Varianten enthalten:
 
-- Supervisor-Testbuild (`9999.09.9.dev9999`) mit `gpu: true`, `GET /hardware/gpu` und
-  `GET/POST /os/extensions`
+- Supervisor-Testbuild (`9999.09.9.dev9999`): `video: true` gibt Apps alle GPU-Geräte,
+  `GET /hardware/gpu`, OS-Varianten in `/os/info` und `/os/update`
 - OS Agent 1.15.0 mit `io.hass.os.GPU` (NVIDIA, AMD, Intel)
 - Home Assistant Core dev mit GPU-Karte auf der Hardware-Seite und GPU-Sensoren
   (Geräte unter „Home Assistant Host“, Sensoren standardmäßig deaktiviert). Core lädt der

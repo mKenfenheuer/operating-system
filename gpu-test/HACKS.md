@@ -14,5 +14,5 @@ other repositories) stay free of it.
 | English translations generated in the image (`script.translations develop`) | `Dockerfile.core` | `translations/en.json` is not in git | Translations built by the Core release process |
 | Core overlay on `ghcr.io/home-assistant/<machine>-homeassistant:dev` | `Dockerfile.core` | No full Core build in the workflow | Released Core |
 | OS Agent built from the fork with `-X main.version=1.15.0` | workflow, job `os` | The Supervisor connects to the GPU interface only from OS Agent 1.15.0 | OS Agent release with the GPU interface (version to be agreed) |
-| Supervisor branch `gpu-test-combined` merges `app-gpu-access`, `gpu-info` and `os-extensions` | supervisor fork | One image with all features | Separate PRs |
+| Supervisor branch `gpu-test-combined-v2` merges `video-gpu-access`, `gpu-info` and `os-variants` | supervisor fork | One image with all features | Separate PRs |
 | Self-signed RAUC key when no repository secrets exist | workflow, job `prepare` | Fork without the release key | Official signing in the release workflow |

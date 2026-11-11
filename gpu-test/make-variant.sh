@@ -2,17 +2,16 @@
 # Build a GPU test variant of a Home Assistant OS raw disk image.
 # Runs in a privileged docker:<version>-dind container (Docker version as in HAOS).
 #
-# usage: make-variant.sh <raw image> <machine> <extension file|none>
-#   raw image:  modified in place
+# usage: make-variant.sh <raw image> <machine>
+#   raw image:  modified in place; for the NVIDIA variants the disk image of
+#               the OS variant, which has the driver extension already
 #   machine:    generic-x86-64 | qemux86-64 (Home Assistant Core image flavour)
-#   extension:  NVIDIA system extension to put on the data partition, or "none"
 #
 # Expects in /inputs: supervisor-gpu.tar, core-<machine>.tar (unless CORE_REGISTRY
 # and CORE_VERSION are set, then Core is pulled from that registry on first boot)
 set -eu
 IMG="$1"
 MACHINE="$2"
-EXT="$3"
 CORE_IMAGE="ghcr.io/home-assistant/${MACHINE}-homeassistant"
 SUPERVISOR_IMAGE="ghcr.io/home-assistant/amd64-hassio-supervisor"
 
@@ -67,13 +66,7 @@ for _ in $(seq 1 30); do [ -e /run/variant-docker.pid ] || break; sleep 1; done
 jq -n --arg version "${CORE_VERSION}" --arg image "${CORE_IMAGE}" \
     '{version: $version, image: $image, override_image: true}' > /mnt/data/supervisor/homeassistant.json
 
-if [ "${EXT}" != "none" ]; then
-    mkdir -p /mnt/data/supervisor/extensions
-    NAME=$(basename "${EXT}" .raw)
-    NAME=${NAME##*.}
-    cp "${EXT}" "/mnt/data/supervisor/extensions/${NAME}.raw"
-fi
-ls -la /mnt/data/supervisor/extensions 2>/dev/null || echo "no extensions"
+ls -laR /mnt/data/supervisor/extensions 2>/dev/null || echo "no extensions"
 cat /mnt/data/supervisor/homeassistant.json
 df -h /mnt/data | tail -1
 umount /mnt/data

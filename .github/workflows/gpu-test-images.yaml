@@ -5,8 +5,9 @@ name: GPU test images
 #
 # Variants for generic-x86-64 (bare metal) and OVA (virtual machines):
 #   amdgpu         AMD and Intel GPUs (drivers in the kernel)
-#   nvidia         plus NVIDIA driver extension, Turing and newer
-#   nvidia-legacy  plus NVIDIA driver extension, Maxwell to Volta
+#   nvidia         OS variant nvidia (NVIDIA driver extension), Turing and newer
+#   nvidia-legacy  OS variant nvidia-legacy, Maxwell to Volta
+# The OS build creates the variants, this workflow only adds the test builds.
 #
 # The images contain the Supervisor and OS Agent test builds. Home Assistant
 # Core (with the GPU frontend) is pulled from GHCR on first boot.
@@ -20,7 +21,7 @@ on:
 env:
   REPO_OWNER: mKenfenheuer
   OS_AGENT_REF: gpu-info
-  SUPERVISOR_REF: gpu-test-combined
+  SUPERVISOR_REF: gpu-test-combined-v2
   CORE_REF: hassio-gpu
   FRONTEND_REF: hardware-gpu
   CLIENT_REF: gpu
@@ -171,7 +172,6 @@ jobs:
           path: |
             output/images/haos_*.img.xz
             output/images/haos_*.qcow2.xz
-            output/images/haos_*.raw
             output/images/haos_*.raucb
           compression-level: 0
           retention-days: 3
@@ -355,22 +355,24 @@ jobs:
           sudo apt-get -qq update && sudo apt-get -qq install -y qemu-utils xz-utils
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
           mkdir -p out
-          BASE=$(basename images/haos_*."${DISK}" ".${DISK}")
+          # haos_<board>-<version>, the OS variants are haos_<board>-<variant>-<version>
+          BASE=$(basename images/haos_"${BOARD}"-[0-9]*."${DISK}" ".${DISK}")
+          VERSION=${BASE#"haos_${BOARD}-"}
           for VARIANT in amdgpu nvidia nvidia-legacy; do
+            SRC="${BASE}"
+            [ "${VARIANT}" != amdgpu ] && SRC="haos_${BOARD}-${VARIANT}-${VERSION}"
             if [ "${DISK}" = img.xz ]; then
-              xz -dc "images/${BASE}.img.xz" > variant.img
+              xz -dc "images/${SRC}.img.xz" > variant.img
             else
-              xz -dc "images/${BASE}.qcow2.xz" > base.qcow2
+              xz -dc "images/${SRC}.qcow2.xz" > base.qcow2
               qemu-img convert -O raw base.qcow2 variant.img
               rm base.qcow2
             fi
-            EXT=none
-            [ "${VARIANT}" != amdgpu ] && EXT="/images/${BASE}.${VARIANT}.raw"
             docker run --rm --privileged -v /dev:/dev -v "$PWD":/work \
-              -v "$PWD/images":/images:ro -v "$PWD/inputs":/inputs:ro \
+              -v "$PWD/inputs":/inputs:ro \
               -v "$PWD/gpu-test/make-variant.sh":/make-variant.sh:ro \
               -e CORE_REGISTRY -e CORE_VERSION \
-              --entrypoint sh docker:29.8.2-dind /make-variant.sh /work/variant.img "${MACHINE}" "${EXT}"
+              --entrypoint sh docker:29.8.2-dind /make-variant.sh /work/variant.img "${MACHINE}"
             sudo chown "$(id -u):$(id -g)" variant.img
             NAME="${BASE}-gpu-${VARIANT}"
             if [ "${DISK}" = img.xz ]; then
@@ -382,7 +384,7 @@ jobs:
             fi
             rm variant.img
           done
-          cp images/haos_*.raw images/haos_*.raucb out/
+          cp images/haos_*.raucb out/
           ls -la out
 
       - name: Upload variants
