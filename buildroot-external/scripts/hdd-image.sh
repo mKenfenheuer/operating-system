@@ -30,9 +30,9 @@ function create_disk_image() {
     export RAUC_MANIFEST IMAGE_NAME BOOT_SPL_TYPE
     SYSTEM_IMAGE=$(path_rootfs_img)
     DATA_IMAGE=${HAOS_DATA_IMAGE:-$(path_data_img)}
-    # system extension the update bundle of an OS variant carries
-    RAUC_EXTENSION=${RAUC_EXTENSION:-none}
-    export SYSTEM_IMAGE DATA_IMAGE RAUC_EXTENSION RAUC_EXTENSION_IMAGE
+    # The update bundle of an OS variant also carries its system extension
+    RAUC_BUNDLE_SUFFIX=${RAUC_EXTENSION:+-extension}
+    export SYSTEM_IMAGE DATA_IMAGE RAUC_BUNDLE_SUFFIX RAUC_EXTENSION RAUC_EXTENSION_IMAGE
 
     trap 'rm -rf "${ROOTPATH_TMP}" "${GENIMAGE_TMPPATH}"' EXIT
     ROOTPATH_TMP="$(mktemp -d)"
