@@ -100,7 +100,13 @@ post_install_kernel() {
 
 post_install_extensions() {
     EXT_DIR=/mnt/data/supervisor/extensions
-    EXT_NEW="${EXT_DIR}/${RAUC_MF_VERSION}"
+    # Slot hooks don't get RAUC_MF_VERSION, the manifest of the bundle has it
+    MF_VERSION="$(sed -n 's/^version=//p' "${RAUC_BUNDLE_MOUNT_POINT}/manifest.raucm")"
+    if [ -z "${MF_VERSION}" ]; then
+        echo "No version in the manifest of the bundle" 1>&2
+        return 1
+    fi
+    EXT_NEW="${EXT_DIR}/${MF_VERSION}"
     # shellcheck disable=SC1091
     CURRENT_VERSION="$(. /etc/os-release && echo "${VERSION_ID}")"
 
@@ -116,7 +122,7 @@ post_install_extensions() {
     mkdir -p "${EXT_NEW}.new"
     for image in "${RAUC_BUNDLE_MOUNT_POINT}"/*.raw; do
         [ -f "${image}" ] || continue
-        echo "Installing system extension $(basename "${image}" .raw) for ${RAUC_MF_VERSION}"
+        echo "Installing system extension $(basename "${image}" .raw) for ${MF_VERSION}"
         cp "${image}" "${EXT_NEW}.new/"
     done
     sync -f "${EXT_NEW}.new"
@@ -126,7 +132,7 @@ post_install_extensions() {
     for dir in "${EXT_DIR}"/*; do
         [ -e "${dir}" ] || continue
         version="$(basename "${dir}")"
-        if [ "${version}" != "${CURRENT_VERSION}" ] && [ "${version}" != "${RAUC_MF_VERSION}" ]; then
+        if [ "${version}" != "${CURRENT_VERSION}" ] && [ "${version}" != "${MF_VERSION}" ]; then
             rm -rf "${dir}"
         fi
     done
@@ -147,9 +153,6 @@ case "$1" in
          echo "Compatible does not match!" 1>&2
          exit 10
          ;;
-    post-install)
-        post_install_extensions
-        ;;
     slot-install)
         if [ "${RAUC_SLOT_CLASS}" = "boot" ]; then
             install_boot
@@ -163,6 +166,9 @@ case "$1" in
         fi
         if [ "${RAUC_SLOT_CLASS}" = "kernel" ]; then
             post_install_kernel
+        fi
+        if [ "${RAUC_SLOT_CLASS}" = "rootfs" ]; then
+            post_install_extensions
         fi
         ;;
     *)
