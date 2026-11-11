@@ -7,7 +7,7 @@ format=verity
 
 [hooks]
 filename=hook
-hooks=install-check;post-install;
+hooks=install-check;
 
 [image.boot]
 filename=boot.vfat
@@ -21,6 +21,7 @@ hooks=post-install;
 
 [image.rootfs]
 filename=rootfs.img
+hooks=post-install;
 
 {{- if eq (env "BOOT_SPL") "true" }}
 [image.spl]
