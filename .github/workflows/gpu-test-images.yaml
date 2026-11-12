@@ -20,7 +20,7 @@ on:
 
 env:
   REPO_OWNER: mKenfenheuer
-  OS_AGENT_REF: gpu-info
+  OS_AGENT_REF: gpu-container-usage
   SUPERVISOR_REF: gpu-test-combined-v2
   CORE_REF: hassio-gpu
   FRONTEND_REF: hardware-gpu
